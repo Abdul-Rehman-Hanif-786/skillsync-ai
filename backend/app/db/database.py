@@ -1,6 +1,9 @@
 """Database connection setup."""
 
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
@@ -12,8 +15,8 @@ engine = create_async_engine(
 
 async_session_local = sessionmaker(
     bind=engine,
-    autoflush=False,
-    autocommit=False,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 Base = declarative_base()
