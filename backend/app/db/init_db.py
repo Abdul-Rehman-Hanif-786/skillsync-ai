@@ -3,8 +3,7 @@
 import asyncio
 
 from app.db.database import Base, engine
-from app.models import User
-
+from app.models import *
 
 async def init_db():
     """Create database tables."""
@@ -15,4 +14,3 @@ async def init_db():
 
 if __name__ == "__main__":
     asyncio.run(init_db())
-    

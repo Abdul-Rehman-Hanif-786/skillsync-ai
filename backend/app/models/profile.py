@@ -1,7 +1,8 @@
 """Profile database model."""
 
-from sqlalchemy import Column, ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import UUID, JSON
+from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
 
@@ -15,11 +16,26 @@ class Profile(BaseModel):
         UUID(as_uuid=True),
         ForeignKey("users.id"),
         nullable=False,
+        unique=True,
     )
 
-    bio = Column(String)
+    bio = Column(Text, nullable=True)
 
-    github_url = Column(String)
+    github_url = Column(String, nullable=True)
 
-    linkedin_url = Column(String)
+    linkedin_url = Column(String, nullable=True)
+    
+    experience_level = Column(String, nullable=True)
+    
+    target_role = Column(String, nullable=True)
+    
+    interests = Column(JSON, nullable=True)
+
+    # Relationships
+    skills = relationship(
+        "UserSkill",
+        backref="profile",
+        lazy="selectin",
+        cascade="all, delete-orphan"
+    )
     
