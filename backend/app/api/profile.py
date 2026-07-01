@@ -20,6 +20,8 @@ from app.schemas.profile import (
     UserSkillResponse,
 )
 
+from sqlalchemy.orm import selectinload
+
 router = APIRouter(
     prefix="/profile",
     tags=["Profile"],
@@ -27,9 +29,13 @@ router = APIRouter(
 
 
 async def _get_profile(user_uuid, db):
-    """Helper to fetch profile by user_id."""
+    """Helper to fetch profile with all skills eagerly loaded."""
     result = await db.execute(
-        select(Profile).where(Profile.user_id == user_uuid)
+        select(Profile)
+        .options(
+            selectinload(Profile.skills).selectinload(UserSkill.skill)
+        )
+        .where(Profile.user_id == user_uuid)
     )
     return result.scalar_one_or_none()
 
@@ -164,7 +170,6 @@ async def add_skill(
     await db.refresh(user_skill)
 
     # Reload with skill relationship for serialization
-    from sqlalchemy.orm import selectinload
     result = await db.execute(
         select(UserSkill)
         .options(selectinload(UserSkill.skill))

@@ -14,10 +14,31 @@ from app.schemas.auth import (
     LoginRequest, RegisterRequest, TokenResponse,
     ForgotPasswordRequest, ResetPasswordRequest,
 )
+from app.dependencies.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 RESET_TOKEN_EXPIRE_MINUTES = 30
+
+
+# ── Me (get current user) ─────────────────────────────────────────────────
+@router.get("/me")
+async def get_me(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the logged-in user's info."""
+    result = await db.execute(
+        select(User).where(User.id == __import__('uuid').UUID(current_user["user_id"]))
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "full_name": user.full_name,
+    }
 
 
 # ── Register ──────────────────────────────────────────────────────────────

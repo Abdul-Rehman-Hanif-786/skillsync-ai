@@ -30,24 +30,25 @@ export default function Login() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-500 mt-1 text-sm">Sign in to continue your career journey</p>
+        <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+        <p className="text-slate-400 mt-1 text-sm">Sign in to continue your career journey</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+          <label className="block text-sm font-semibold text-slate-200 mb-1.5">
             Email Address
           </label>
           <div className="relative">
-            <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="email"
               required
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="input-field pl-10"
+              className="w-full px-4 py-2.5 pl-10 rounded-xl text-sm outline-none transition-all duration-200 border text-white placeholder-slate-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
               placeholder="you@example.com"
             />
           </div>
@@ -56,24 +57,25 @@ export default function Login() {
         {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-semibold text-gray-700">
+            <label className="block text-sm font-semibold text-slate-200">
               Password
             </label>
             <Link
               to="/forgot-password"
-              className="text-xs text-primary-600 hover:text-primary-700 font-semibold transition-colors"
+              className="text-xs text-primary-400 hover:text-primary-300 font-semibold transition-colors"
             >
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
               type="password"
               required
               value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
-              className="input-field pl-10"
+              className="w-full px-4 py-2.5 pl-10 rounded-xl text-sm outline-none transition-all duration-200 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary-500"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
               placeholder="••••••••"
             />
           </div>
@@ -92,9 +94,9 @@ export default function Login() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-slate-400">
         Don't have an account?{' '}
-        <Link to="/register" className="text-primary-600 hover:text-primary-700 font-semibold">
+        <Link to="/register" className="text-primary-400 hover:text-primary-300 font-semibold">
           Create one →
         </Link>
       </p>

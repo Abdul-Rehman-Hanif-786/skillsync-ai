@@ -37,13 +37,10 @@ class UserSkillResponse(BaseModel):
     class Config:
         from_attributes = True
 
-    @classmethod
-    def model_validate(cls, obj, **kwargs):
-        instance = super().model_validate(obj, **kwargs)
-        # sync proficiency alias
-        if instance.proficiency is None and instance.proficiency_level is not None:
-            instance.proficiency = instance.proficiency_level
-        return instance
+    def model_post_init(self, __context):
+        # Sync proficiency = proficiency_level whenever object is created
+        if self.proficiency is None and self.proficiency_level is not None:
+            object.__setattr__(self, 'proficiency', self.proficiency_level)
 
 
 # ── Profile schemas ────────────────────────────────────────────────────────

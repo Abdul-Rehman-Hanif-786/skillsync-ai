@@ -34,7 +34,7 @@ router = APIRouter(
 
 @router.post("/generate", response_model=List[RecommendationResponse])
 async def generate_recommendations(
-    request: RecommendationGenerateRequest = None,
+    request: RecommendationGenerateRequest = RecommendationGenerateRequest(),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -69,18 +69,16 @@ async def generate_recommendations(
     )
     user_skills_result = await db.execute(user_skills_query)
     user_skills = user_skills_result.scalars().all()
-    
     skill_names = [us.skill.name for us in user_skills]
     
     # Determine target role
-    target_role = request.target_role if request else None
-    if not target_role and profile.target_role:
-        target_role = profile.target_role
+    target_role = request.target_role or (profile.target_role if profile else None)
+    generate_type = request.generate_type or "all"
     
     generated_recommendations = []
     
     # Generate skill recommendations
-    if request.generate_type in ["all", "skills"]:
+    if generate_type in ["all", "skills"]:
         skill_recs = generate_skill_recommendations(skill_names, target_role)
         
         for rec in skill_recs:
@@ -99,7 +97,7 @@ async def generate_recommendations(
             generated_recommendations.append(recommendation)
     
     # Generate career path recommendations
-    if request.generate_type in ["all", "career"]:
+    if generate_type in ["all", "career"]:
         if target_role:
             # Generate specific career path recommendation
             gap_analysis = analyze_skill_gap(skill_names, target_role)

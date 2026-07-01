@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
+import { authService } from './services'
+import { useAuthStore } from './store/authStore'
 
 // Auth
 import Login from './pages/auth/Login'
@@ -35,11 +38,17 @@ import Settings from './pages/settings/Settings'
 import MainLayout from './components/layout/MainLayout'
 import AuthLayout from './components/layout/AuthLayout'
 
-// Auth Guard
-import { useAuthStore } from './store/authStore'
-
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user, updateUser } = useAuthStore()
+
+  // If logged in but user object missing — fetch from backend
+  useEffect(() => {
+    if (isAuthenticated && !user?.full_name) {
+      authService.getMe()
+        .then(res => updateUser(res.data))
+        .catch(() => {})
+    }
+  }, [isAuthenticated])
 
   return (
     <>
@@ -75,8 +84,8 @@ function App() {
 
             {/* Roadmaps */}
             <Route path="/roadmaps" element={<MyRoadmaps />} />
-            <Route path="/roadmaps/:id" element={<RoadmapDetail />} />
             <Route path="/roadmaps/advisor" element={<CareerAdvisor />} />
+            <Route path="/roadmaps/:id" element={<RoadmapDetail />} />
 
             {/* Settings */}
             <Route path="/settings" element={<Settings />} />

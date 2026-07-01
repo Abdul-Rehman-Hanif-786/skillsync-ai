@@ -104,24 +104,40 @@ def analyze_skill_gap(
     user_skills: List[str],
     target_role: str
 ) -> Dict:
-    """
-    Analyze skill gap for a target role.
-    
-    Args:
-        user_skills: List of skills user currently has
-        target_role: Target career role
-    
-    Returns:
-        Dict with skill gap analysis
-    """
-    
-    if target_role not in CAREER_PATHS:
+    """Analyze skill gap for a target role."""
+
+    # Case-insensitive role matching
+    matched_role = None
+    for role in CAREER_PATHS:
+        if role.lower() == target_role.lower():
+            matched_role = role
+            break
+    # Partial match fallback
+    if not matched_role:
+        for role in CAREER_PATHS:
+            if target_role.lower() in role.lower() or role.lower() in target_role.lower():
+                matched_role = role
+                break
+
+    if not matched_role:
+        # Return generic analysis instead of error
         return {
-            "error": f"Unknown role: {target_role}",
-            "available_roles": list(CAREER_PATHS.keys())
+            "target_role": target_role,
+            "current_skills_count": len(user_skills),
+            "required_skills": [],
+            "missing_required_skills": [],
+            "missing_recommended_skills": [],
+            "skill_match_percentage": 0,
+            "readiness_level": "unknown",
+            "recommendations": [
+                f"'{target_role}' is not in our database yet. "
+                f"Available roles: {', '.join(list(CAREER_PATHS.keys())[:4])}…"
+            ],
+            "career_description": "",
+            "available_roles": list(CAREER_PATHS.keys()),
         }
-    
-    career_data = CAREER_PATHS[target_role]
+
+    career_data = CAREER_PATHS[matched_role]
     required_skills = career_data["required_skills"]
     recommended_skills = career_data["recommended_skills"]
     
@@ -195,52 +211,51 @@ def generate_skill_recommendations(
     user_skills: List[str],
     target_role: Optional[str] = None
 ) -> List[Dict]:
-    """
-    Generate personalized skill recommendations.
-    
-    Args:
-        user_skills: List of user's current skills
-        target_role: Optional target role
-    
-    Returns:
-        List of skill recommendations
-    """
-    
+    """Generate personalized skill recommendations."""
+
     recommendations = []
-    
+
     # If target role specified, generate role-specific recommendations
-    if target_role and target_role in CAREER_PATHS:
-        gap_analysis = analyze_skill_gap(user_skills, target_role)
-        
-        if "error" not in gap_analysis:
-            # Add missing required skills as high priority
-            for skill in gap_analysis["missing_required_skills"]:
-                recommendations.append({
-                    "skill": skill,
-                    "priority": "high",
-                    "reason": f"Required for {target_role} role",
-                    "type": "required"
-                })
-            
-            # Add missing recommended skills as medium priority
-            for skill in gap_analysis["missing_recommended_skills"]:
-                recommendations.append({
-                    "skill": skill,
-                    "priority": "medium",
-                    "reason": f"Recommended for {target_role} role",
-                    "type": "recommended"
-                })
-    
-    # If no target role or want general recommendations
-    if not target_role:
-        # Suggest popular/valuable skills user doesn't have
+    if target_role:
+        # Case-insensitive lookup
+        matched_role = None
+        for role in CAREER_PATHS:
+            if role.lower() == target_role.lower():
+                matched_role = role
+                break
+        if not matched_role:
+            for role in CAREER_PATHS:
+                if target_role.lower() in role.lower() or role.lower() in target_role.lower():
+                    matched_role = role
+                    break
+
+        if matched_role:
+            gap_analysis = analyze_skill_gap(user_skills, matched_role)
+            if "missing_required_skills" in gap_analysis:
+                # Add missing required skills as high priority
+                for skill in gap_analysis["missing_required_skills"]:
+                    recommendations.append({
+                        "skill": skill,
+                        "priority": "high",
+                        "reason": f"Required for {matched_role} role",
+                        "type": "required"
+                    })
+                # Add missing recommended skills as medium priority
+                for skill in gap_analysis.get("missing_recommended_skills", []):
+                    recommendations.append({
+                        "skill": skill,
+                        "priority": "medium",
+                        "reason": f"Recommended for {matched_role} role",
+                        "type": "recommended"
+                    })
+
+    # General recommendations when no target role or to pad results
+    if not target_role or not recommendations:
         valuable_skills = [
             "Python", "Docker", "Git", "REST API", "PostgreSQL",
-            "Machine Learning", "AWS", "CI/CD"
+            "Machine Learning", "AWS", "CI/CD", "TypeScript", "React"
         ]
-        
         user_skills_lower = [s.lower() for s in user_skills]
-        
         for skill in valuable_skills:
             if skill.lower() not in user_skills_lower:
                 recommendations.append({
@@ -249,7 +264,7 @@ def generate_skill_recommendations(
                     "reason": "Highly valuable skill in the industry",
                     "type": "general"
                 })
-    
+
     return recommendations
 
 

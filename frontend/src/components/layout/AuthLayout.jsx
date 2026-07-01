@@ -166,46 +166,72 @@ export default function AuthLayout() {
         {/* Right panel — form (always visible, sticky) */}
         <div
           className="flex-1 flex items-center justify-center p-6 relative transition-all duration-700 overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f5f3ff 100%)',
-          }}
+          style={{ background: 'linear-gradient(145deg, #0a1628 0%, #0d1f3c 50%, #0a1420 100%)' }}
         >
-          {/* ── Animated orbs ── */}
+          {/* ── Same style as left — dark particles + orbs (lighter opacity) ── */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {/* Large slow orb — top left */}
+
+            {/* Soft orbs — same as left but lighter */}
             <div style={{
-              position: 'absolute', top: '-10%', left: '-10%',
-              width: '55%', height: '55%', borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(14,165,233,0.18) 0%, transparent 70%)',
-              animation: 'orbFloat1 8s ease-in-out infinite',
+              position:'absolute', top:'-15%', right:'-10%',
+              width:'65%', height:'65%', borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 65%)',
+              animation:'orbFloat2 9s ease-in-out infinite',
             }} />
-            {/* Medium orb — bottom right */}
             <div style={{
-              position: 'absolute', bottom: '-15%', right: '-10%',
-              width: '60%', height: '60%', borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
-              animation: 'orbFloat2 10s ease-in-out infinite',
+              position:'absolute', bottom:'-10%', left:'-10%',
+              width:'55%', height:'55%', borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 65%)',
+              animation:'orbFloat1 11s ease-in-out infinite',
             }} />
-            {/* Small orb — center right */}
             <div style={{
-              position: 'absolute', top: '35%', right: '5%',
-              width: '30%', height: '30%', borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)',
-              animation: 'orbFloat3 7s ease-in-out infinite',
+              position:'absolute', top:'40%', left:'10%',
+              width:'35%', height:'35%', borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(52,211,153,0.08) 0%, transparent 65%)',
+              animation:'orbFloat3 7s ease-in-out 2s infinite',
             }} />
-            {/* Tiny accent orb — top right */}
             <div style={{
-              position: 'absolute', top: '10%', right: '15%',
-              width: '18%', height: '18%', borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(14,165,233,0.2) 0%, transparent 70%)',
-              animation: 'orbFloat1 5s ease-in-out 1s infinite',
+              position:'absolute', top:'15%', left:'30%',
+              width:'20%', height:'20%', borderRadius:'50%',
+              background:'radial-gradient(circle, rgba(14,165,233,0.10) 0%, transparent 70%)',
+              animation:'orbFloat1 6s ease-in-out 1s infinite',
             }} />
 
-            {/* Grid dot pattern overlay */}
+            {/* Floating particles — same component style as left side */}
+            {[...Array(14)].map((_, i) => (
+              <div key={i} style={{
+                position:'absolute',
+                width:  `${5 + (i % 4) * 5}px`,
+                height: `${5 + (i % 4) * 5}px`,
+                borderRadius:'50%',
+                opacity: 0.12 + (i % 3) * 0.05,
+                background: i % 3 === 0 ? '#38bdf8' : i % 3 === 1 ? '#818cf8' : '#34d399',
+                left:  `${(i * 19 + 7) % 88}%`,
+                top:   `${(i * 27 + 5) % 82}%`,
+                animation:`float ${4 + (i % 4)}s ease-in-out ${i * 0.35}s infinite`,
+              }} />
+            ))}
+
+            {/* Subtle grid lines */}
             <div style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: 'radial-gradient(circle, rgba(14,165,233,0.08) 1px, transparent 1px)',
-              backgroundSize: '28px 28px',
+              position:'absolute', inset:0,
+              backgroundImage:`
+                linear-gradient(rgba(14,165,233,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14,165,233,0.04) 1px, transparent 1px)
+              `,
+              backgroundSize:'40px 40px',
+            }} />
+
+            {/* Corner glow accent */}
+            <div style={{
+              position:'absolute', top:0, right:0,
+              width:'40%', height:'35%',
+              background:'radial-gradient(ellipse at top right, rgba(14,165,233,0.08) 0%, transparent 70%)',
+            }} />
+            <div style={{
+              position:'absolute', bottom:0, left:0,
+              width:'40%', height:'35%',
+              background:'radial-gradient(ellipse at bottom left, rgba(139,92,246,0.08) 0%, transparent 70%)',
             }} />
           </div>
           {/* Mobile logo */}
@@ -213,25 +239,28 @@ export default function AuthLayout() {
             <div className="w-7 h-7 rounded-lg bg-primary-600 flex items-center justify-center">
               <FiZap className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">SkillSync AI</span>
+            <span className="font-bold text-white">SkillSync AI</span>
           </div>
 
-          <div className="w-full max-w-md" style={{ animation: 'scaleIn 0.5s ease-out both' }}>
-            {/* Page title */}
+          <div className="w-full max-w-md relative z-10" style={{ animation: 'scaleIn 0.5s ease-out both' }}>
+            {/* Page title — mobile */}
             <div className="text-center mb-6 lg:hidden">
-              <h2 className="text-2xl font-extrabold text-gray-900">{pageTitle}</h2>
+              <h2 className="text-2xl font-extrabold text-white">{pageTitle}</h2>
             </div>
 
             {/* Form card */}
-            <div className="bg-white rounded-3xl p-8 border border-gray-100"
-              style={{ boxShadow: '0 4px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="rounded-3xl p-8 border border-white/10 backdrop-blur-sm"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+              }}>
               <Outlet />
             </div>
 
             {/* Trust badges */}
             <div className="flex items-center justify-center gap-4 mt-5 flex-wrap">
               {['🔒 Secure', '⚡ AI Powered', '🚀 Free to start'].map(b => (
-                <span key={b} className="text-xs text-gray-400 font-medium">{b}</span>
+                <span key={b} className="text-xs text-slate-400 font-medium">{b}</span>
               ))}
             </div>
           </div>

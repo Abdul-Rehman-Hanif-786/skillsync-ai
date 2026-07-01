@@ -233,3 +233,60 @@ async def get_resume_history(
         )
         for resume in resumes
     ]
+
+
+@router.get("/{resume_id}", response_model=ResumeResponse)
+async def get_resume_by_id(
+    resume_id: str,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a specific resume by ID."""
+    user_uuid = uuid.UUID(current_user["user_id"])
+    
+    query = select(Resume).where(
+        Resume.id == uuid.UUID(resume_id),
+        Resume.user_id == user_uuid,
+    )
+    result = await db.execute(query)
+    resume = result.scalar_one_or_none()
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    
+    return ResumeResponse(
+        id=str(resume.id),
+        filename=resume.filename,
+        extracted_text=resume.extracted_text,
+        extracted_skills=resume.extracted_skills,
+        parsing_status=resume.parsing_status,
+        created_at=resume.created_at,
+    )
+
+
+@router.delete("/{resume_id}")
+async def delete_resume(
+    resume_id: str,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a resume."""
+    user_uuid = uuid.UUID(current_user["user_id"])
+    
+    query = select(Resume).where(
+        Resume.id == uuid.UUID(resume_id),
+        Resume.user_id == user_uuid,
+    )
+    result = await db.execute(query)
+    resume = result.scalar_one_or_none()
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    
+    # Delete file if exists
+    if resume.file_path and os.path.exists(resume.file_path):
+        os.remove(resume.file_path)
+    
+    await db.delete(resume)
+    await db.commit()
+    return {"message": "Resume deleted successfully"}

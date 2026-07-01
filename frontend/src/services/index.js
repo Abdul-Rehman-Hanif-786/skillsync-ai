@@ -7,6 +7,7 @@ export const authService = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   verifyResetToken: (token) => api.get(`/auth/verify-reset-token?token=${token}`),
   resetPassword: (token, new_password) => api.post('/auth/reset-password', { token, new_password }),
+  getMe: () => api.get('/auth/me'),
 }
 
 // Dashboard Services
@@ -39,7 +40,7 @@ export const resumeService = {
   upload: (formData) => api.post('/resume/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  getAll: () => api.get('/resume/'),
+  getAll: () => api.get('/resume/history'),
   getById: (id) => api.get(`/resume/${id}`),
   delete: (id) => api.delete(`/resume/${id}`),
 }

@@ -164,50 +164,45 @@ Generate the roadmap now:
         question: str,
         user_context: Optional[Dict] = None,
     ) -> str:
-        """
-        Get AI-powered career advice.
-        
-        Args:
-            question: User's question
-            user_context: Optional context about user
-        
-        Returns:
-            AI-generated advice
-        """
-        
-        context_str = ""
+        """Get AI-powered career advice."""
+
+        context_parts = []
         if user_context:
-            context_str = f"\n\nUSER CONTEXT:\n{json.dumps(user_context, indent=2)}"
-        
-        prompt = f"""
-You are an expert career advisor specializing in tech careers.
+            if user_context.get("target_role"):
+                context_parts.append(f"target={user_context['target_role']}")
+            if user_context.get("experience_level"):
+                context_parts.append(f"level={user_context['experience_level']}")
+            if user_context.get("current_skills"):
+                skills = user_context["current_skills"][:6]
+                context_parts.append(f"skills={','.join(skills)}")
 
-{context_str}
+        context_line = f"[Context: {' | '.join(context_parts)}]\n" if context_parts else ""
 
-USER QUESTION:
-{question}
+        system_prompt = """You are SkillSync AI — a sharp career advisor for tech professionals.
 
-Please provide a detailed, helpful, and actionable response.
-"""
-        
+RESPONSE STYLE:
+- Default: 2-4 sentences MAX. Direct, no fluff.
+- If user says "in detail" / "more detail" / "explain": give 5-8 sentences or a short list
+- If user says "in points": use 4-6 bullet points, each 1 line
+- If user says "step by step": numbered steps, each 1-2 lines
+- If user asks "~N words / almost N words": match that word count closely
+- NEVER repeat the user's skills list back to them unless directly asked
+- NEVER say "As a mid-level developer..." or "Based on your profile..."
+- NEVER add "Great question!", "I hope this helps", "Feel free to ask"
+- Answer like a knowledgeable friend texting back
+- End EVERY response with one concrete action the user can do TODAY (max 15 words)"""
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a helpful career advisor. "
-                            "Provide specific, actionable advice for tech professionals."
-                        )
-                    },
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": f"{context_line}{question}"},
                 ],
-                temperature=0.7,
-                max_tokens=2000,
+                temperature=0.55,
+                max_tokens=500,
             )
-            
             return response.choices[0].message.content
-        
+
         except Exception as e:
             raise Exception(f"Failed to get career advice: {str(e)}")
