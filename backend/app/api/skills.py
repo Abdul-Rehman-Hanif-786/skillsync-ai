@@ -48,6 +48,20 @@ async def create_skill(
     return skill
 
 
+@router.get("/search", response_model=List[SkillResponse])
+async def search_skills(
+    q: str = Query(..., description="Search query"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Search skills by name — used by frontend autocomplete."""
+    query = select(Skill).where(
+        Skill.name.ilike(f"%{q}%")
+    ).order_by(Skill.name).limit(20)
+
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
 @router.get("/", response_model=List[SkillResponse])
 async def get_all_skills(
     category: Optional[str] = Query(None, description="Filter by category"),

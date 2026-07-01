@@ -1,7 +1,8 @@
 """User-Skill relationship model."""
 
-from sqlalchemy import Column, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
 
@@ -28,7 +29,9 @@ class UserSkill(BaseModel):
         nullable=True,
     )
 
-    # Unique constraint to prevent duplicate skills
+    # Eager load skill so serialization always works
+    # Note: 'skill' backref is already defined in Skill.users relationship
+
     __table_args__ = (
-        # Composite unique constraint
+        UniqueConstraint("profile_id", "skill_id", name="uq_profile_skill"),
     )

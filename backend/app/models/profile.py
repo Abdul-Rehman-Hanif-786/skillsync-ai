@@ -1,6 +1,6 @@
 """Profile database model."""
 
-from sqlalchemy import Column, ForeignKey, String, Text
+from sqlalchemy import Column, ForeignKey, String, Text, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.orm import relationship
 
@@ -21,14 +21,24 @@ class Profile(BaseModel):
 
     bio = Column(Text, nullable=True)
 
+    # Current job title
+    current_role = Column(String, nullable=True, key="current_role")
+
+    # Career goal
+    target_role = Column(String, nullable=True)
+
+    # Location e.g. "Karachi, Pakistan"
+    location = Column(String, nullable=True, key="location")
+
+    # Years of professional experience
+    years_of_experience = Column(Integer, nullable=True)
+
+    experience_level = Column(String, nullable=True)
+
     github_url = Column(String, nullable=True)
 
     linkedin_url = Column(String, nullable=True)
-    
-    experience_level = Column(String, nullable=True)
-    
-    target_role = Column(String, nullable=True)
-    
+
     interests = Column(JSON, nullable=True)
 
     # Relationships
@@ -36,6 +46,5 @@ class Profile(BaseModel):
         "UserSkill",
         backref="profile",
         lazy="selectin",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
-    

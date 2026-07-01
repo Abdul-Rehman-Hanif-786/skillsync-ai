@@ -2,65 +2,40 @@
 
 from datetime import datetime, timedelta
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-)
-
 
 def hash_password(password: str) -> str:
-    """Hash plain password."""
-    # Bcrypt has a 72-byte limit, truncate if needed
-    password_bytes = password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-        password = password_bytes.decode('utf-8', errors='ignore')
-    
-    return pwd_context.hash(password)
+    """Hash plain password using bcrypt directly."""
+    password_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
-def verify_password(
-    plain_password: str,
-    hashed_password: str
-) -> bool:
-    """Verify password."""
-    # Bcrypt has a 72-byte limit, truncate if needed
-    password_bytes = plain_password.encode('utf-8')
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-        plain_password = password_bytes.decode('utf-8', errors='ignore')
-    
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
-    )
-
-
-def create_access_token(
-    data: dict,
-):
-    """Create JWT access token."""
-
-    to_encode = data.copy()
-
-    expire = datetime.utcnow() + timedelta(
-        minutes=int(
-            settings.ACCESS_TOKEN_EXPIRE_MINUTES
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify password using bcrypt directly."""
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
         )
+    except Exception:
+        return False
+
+
+def create_access_token(data: dict) -> str:
+    """Create JWT access token."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(
+        minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-
     to_encode.update({"exp": expire})
-
-    encoded_jwt = jwt.encode(
+    return jwt.encode(
         to_encode,
         settings.SECRET_KEY,
         algorithm=settings.ALGORITHM,
     )
-
-    return encoded_jwt
-    

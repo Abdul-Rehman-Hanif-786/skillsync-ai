@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - SkillSync AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #0284c7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0369a1;
+        }
+        .danger {
+            background: #dc2626;
+        }
+        .danger:hover {
+            background: #b91c1c;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 SkillSync AI - Debug Page</h1>
+    
+    <div class="card">
+        <h2>Current Status</h2>
+        <p><strong>LocalStorage Token:</strong> <span id="token-status"></span></p>
+        <p><strong>isAuthenticated:</strong> <span id="auth-status"></span></p>
+        <pre id="all-storage"></pre>
+    </div>
+
+    <div class="card">
+        <h2>Quick Actions</h2>
+        <button onclick="goToLogin()">Go to Login</button>
+        <button onclick="goToRegister()">Go to Register</button>
+        <button class="danger" onclick="clearStorage()">Clear All Storage</button>
+        <button onclick="clearAndGoToLogin()">Clear & Login</button>
+    </div>
+
+    <div class="card">
+        <h2>Manual Console</h2>
+        <p>Press <strong>F12</strong> to open DevTools, then type:</p>
+        <pre>localStorage.clear()
+window.location.href = '/login'</pre>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const token = localStorage.getItem('token');
+            document.getElementById('token-status').textContent = token ? '✅ Has Token' : '❌ No Token';
+            document.getElementById('auth-status').textContent = token ? 'TRUE' : 'FALSE';
+            
+            const allStorage = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                allStorage[key] = localStorage.getItem(key);
+            }
+            document.getElementById('all-storage').textContent = JSON.stringify(allStorage, null, 2);
+        }
+
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+
+        function goToRegister() {
+            window.location.href = '/register';
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            alert('Storage cleared!');
+            updateStatus();
+        }
+
+        function clearAndGoToLogin() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        updateStatus();
+    </script>
+</body>
+</html>

@@ -26,10 +26,9 @@ class Skill(BaseModel):
 
     description = Column(String, nullable=True)
 
-    # Relationships
+    # Relationships — backref="skill" creates UserSkill.skill automatically
     users = relationship(
         "UserSkill",
         backref="skill",
-        lazy="selectin",
-        cascade="all, delete-orphan"
+        lazy="select",
     )
