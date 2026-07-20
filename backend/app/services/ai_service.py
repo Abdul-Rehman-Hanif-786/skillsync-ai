@@ -159,6 +159,61 @@ Generate the roadmap now:
         
         return prompt
     
+    def estimate_skill_proficiency(
+        self,
+        resume_text: str,
+        skills: list,
+    ) -> dict:
+        """
+        Use AI to estimate proficiency level for each skill based on resume text.
+        Returns dict: {skill_name: proficiency_level}
+        """
+        if not skills:
+            return {}
+
+        skills_str = ', '.join(skills[:20])  # limit to avoid token overflow
+
+        prompt = f"""Analyze this resume text and estimate the proficiency level for each skill listed.
+
+SKILLS TO EVALUATE: {skills_str}
+
+RESUME TEXT:
+{resume_text[:3000]}
+
+For each skill, determine proficiency based on:
+- "expert": 5+ years, led teams, built complex systems with this skill
+- "advanced": 3-5 years, strong hands-on experience, can mentor others
+- "intermediate": 1-3 years, working knowledge, used in real projects
+- "beginner": <1 year, basic understanding, learning or just started
+
+Respond ONLY with valid JSON like this:
+{{
+  "Python": "advanced",
+  "React": "intermediate",
+  "Docker": "beginner"
+}}
+
+Only include skills from the list above. Use exactly these values: expert, advanced, intermediate, beginner."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a resume analyzer. Respond only with valid JSON."},
+                    {"role": "user",   "content": prompt},
+                ],
+                temperature=0.3,
+                max_tokens=400,
+                response_format={"type": "json_object"},
+            )
+            import json
+            result = json.loads(response.choices[0].message.content)
+            # Validate values
+            valid = {"expert", "advanced", "intermediate", "beginner"}
+            return {k: v for k, v in result.items() if v in valid}
+        except Exception:
+            return {}
+
     def generate_career_advice(
         self,
         question: str,

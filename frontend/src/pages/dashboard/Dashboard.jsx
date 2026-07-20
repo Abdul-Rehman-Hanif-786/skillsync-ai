@@ -148,16 +148,47 @@ function TipCard() {
    MAIN DASHBOARD
 ═══════════════════════════════════════════════════════════ */
 export default function Dashboard() {
-  const [stats,   setStats]   = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [stats,   setStats]    = useState(null)
+  const [activity, setActivity] = useState([])
+  const [loading, setLoading]  = useState(true)
   const { user } = useAuthStore()
 
   useEffect(() => { loadDashboard() }, [])
 
   const loadDashboard = async () => {
     try {
-      const res = await dashboardService.getStats()
-      setStats(res.data)
+      const statsRes = await dashboardService.getStats()
+      setStats(statsRes.data)
+
+      // Activity fetch separately — don't fail dashboard if it errors
+      try {
+        const activityRes = await dashboardService.getActivity(50)
+        const acts = activityRes.data?.activities || []
+        const days  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+        const today = new Date()
+
+        const weekData = Array.from({ length: 7 }, (_, i) => {
+          const d      = new Date(today)
+          d.setDate(today.getDate() - (6 - i))
+          const dayStr  = days[d.getDay()]
+          const dateStr = d.toDateString()
+          const count   = acts.filter(a => {
+            const ad = new Date(a.timestamp)
+            return ad.toDateString() === dateStr
+          }).length
+          return { day: dayStr, score: count }
+        })
+        setActivity(weekData)
+      } catch {
+        // Fall back to empty chart — don't crash dashboard
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+        const today = new Date()
+        setActivity(Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(today)
+          d.setDate(today.getDate() - (6 - i))
+          return { day: days[d.getDay()], score: 0 }
+        }))
+      }
     } catch {
       toast.error('Failed to load dashboard')
     } finally {
@@ -208,12 +239,6 @@ export default function Dashboard() {
     { name:'Resumes',   value: stats?.total_resumes || 0     },
     { name:'Recs',      value: stats?.total_recommendations || 0 },
   ]
-
-  /* Fake weekly activity for area chart */
-  const weekActivity = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>({
-    day: d,
-    score: Math.floor(20 + Math.random()*60 + (i===2||i===4?20:0)),
-  }))
 
   const hour = new Date().getHours()
   const greeting = hour<12 ? 'Good morning' : hour<18 ? 'Good afternoon' : 'Good evening'
@@ -272,19 +297,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Weekly activity area chart */}
+        {/* Real activity area chart */}
         <div className="card lg:col-span-2 animate-slide-up stagger-3">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-bold text-gray-900">Weekly Activity</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Career engagement score</p>
+              <p className="text-xs text-gray-400 mt-0.5">Real events — resumes, roadmaps, recommendations</p>
             </div>
             <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg">
-              <FiActivity className="w-3 h-3" /> Active
+              <FiActivity className="w-3 h-3" /> Live Data
             </span>
           </div>
           <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={weekActivity}>
+            <AreaChart data={activity}>
               <defs>
                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor="#0ea5e9" stopOpacity={0.25} />
@@ -293,11 +318,34 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize:11, fill:'#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip contentStyle={{ borderRadius:'12px', border:'none', boxShadow:'0 8px 32px rgba(0,0,0,0.1)', fontSize:'12px' }} />
-              <Area type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#areaGrad)" dot={false} activeDot={{ r:4, fill:'#0ea5e9', stroke:'#fff', strokeWidth:2 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize:11, fill:'#94a3b8' }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ borderRadius:'12px', border:'none', boxShadow:'0 8px 32px rgba(0,0,0,0.1)', fontSize:'12px' }}
+                formatter={(v) => [v, 'Activities']}
+              />
+              <Area type="monotone" dataKey="score" stroke="#0ea5e9" strokeWidth={2.5}
+                fill="url(#areaGrad)" dot={false}
+                activeDot={{ r:4, fill:'#0ea5e9', stroke:'#fff', strokeWidth:2 }} />
             </AreaChart>
           </ResponsiveContainer>
+
+          {/* Activity breakdown tiles */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
+            {[
+              { label:'Skills',         value: skills.total_skills || 0,           color:'text-primary-600', bg:'bg-primary-50',  icon:'🎯' },
+              { label:'Roadmaps',       value: learning.active_roadmaps || 0,      color:'text-violet-600',  bg:'bg-violet-50',   icon:'🗺️' },
+              { label:'Resumes',        value: stats?.total_resumes || 0,          color:'text-emerald-600', bg:'bg-emerald-50',  icon:'📄' },
+              { label:'Recommendations',value: stats?.total_recommendations || 0, color:'text-amber-600',   bg:'bg-amber-50',    icon:'💡' },
+            ].map(({ label, value, color, bg, icon }) => (
+              <div key={label} className={`p-3 rounded-xl ${bg} flex items-center gap-2.5`}>
+                <span className="text-lg">{icon}</span>
+                <div>
+                  <p className={`text-lg font-extrabold ${color} leading-none`}>{value}</p>
+                  <p className="text-[10px] text-gray-400 font-medium mt-0.5">{label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

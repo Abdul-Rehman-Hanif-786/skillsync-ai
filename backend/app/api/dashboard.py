@@ -131,7 +131,7 @@ async def get_recent_activity(
     for r in resumes:
         activities.append(ActivityItem(
             type="resume_uploaded",
-            title=f"Uploaded resume: {r.original_filename}",
+            title=f"Uploaded resume: {r.filename or 'Resume'}",
             timestamp=r.created_at or datetime.utcnow(),
             icon="document",
         ))

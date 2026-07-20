@@ -20,6 +20,7 @@ from app.services.resume_parser import (
     extract_text_from_pdf,
     extract_skills_from_text,
 )
+from app.services.ai_service import GroqService
 
 router = APIRouter(
     prefix="/resume",
@@ -90,6 +91,18 @@ async def upload_resume(
         # Extract skills from resume
         extracted_skills = extract_skills_from_text(extracted_text, known_skills)
         
+        # Use AI to estimate proficiency for each extracted skill
+        skill_proficiency = {}
+        if extracted_skills:
+            try:
+                ai_service = GroqService()
+                skill_names = [s["name"] for s in extracted_skills]
+                skill_proficiency = ai_service.estimate_skill_proficiency(
+                    extracted_text, skill_names
+                )
+            except Exception:
+                pass  # Fall back to beginner if AI fails
+        
         # Create resume record
         resume = Resume(
             user_id=user_uuid,
@@ -131,11 +144,12 @@ async def upload_resume(
                     skill = skill_result.scalar_one_or_none()
                     
                     if skill and skill.id not in existing_skill_ids:
-                        # Add skill to profile
+                        # Use AI-estimated proficiency, fall back to beginner
+                        prof_level = skill_proficiency.get(skill_name, "beginner")
                         user_skill = UserSkill(
                             profile_id=profile.id,
                             skill_id=skill.id,
-                            proficiency_level="unknown",
+                            proficiency_level=prof_level,
                         )
                         
                         db.add(user_skill)
@@ -270,7 +284,7 @@ async def delete_resume(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a resume."""
+    """Delete a resume and remove its extracted skills from profile."""
     user_uuid = uuid.UUID(current_user["user_id"])
     
     query = select(Resume).where(
@@ -283,10 +297,43 @@ async def delete_resume(
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found.")
     
+    # Remove skills that were extracted from this resume
+    if resume.extracted_skills:
+        # Get user's profile
+        profile_result = await db.execute(
+            select(Profile).where(Profile.user_id == user_uuid)
+        )
+        profile = profile_result.scalar_one_or_none()
+        
+        if profile:
+            # Get skill names from resume
+            extracted_names = [
+                s["name"] if isinstance(s, dict) else s
+                for s in resume.extracted_skills
+            ]
+            
+            if extracted_names:
+                # Find matching skills in DB
+                skills_result = await db.execute(
+                    select(Skill).where(Skill.name.in_(extracted_names))
+                )
+                skill_ids = {s.id for s in skills_result.scalars().all()}
+                
+                if skill_ids:
+                    # Delete user_skills that match
+                    us_result = await db.execute(
+                        select(UserSkill).where(
+                            UserSkill.profile_id == profile.id,
+                            UserSkill.skill_id.in_(skill_ids),
+                        )
+                    )
+                    for us in us_result.scalars().all():
+                        await db.delete(us)
+    
     # Delete file if exists
     if resume.file_path and os.path.exists(resume.file_path):
         os.remove(resume.file_path)
     
     await db.delete(resume)
     await db.commit()
-    return {"message": "Resume deleted successfully"}
+    return {"message": "Resume and extracted skills deleted successfully"}

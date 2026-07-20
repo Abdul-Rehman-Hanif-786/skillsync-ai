@@ -179,26 +179,19 @@ class DashboardService:
 
             gap_analysis = analyze_skill_gap(skill_names, profile.target_role)
 
-            if "error" in gap_analysis:
-                return CareerStats(
-                    readiness_level="unknown",
-                    target_role=profile.target_role,
-                )
-
-            # Strengths (matched skills)
+            # No required skills means role not found — still show partial data
             required_skills = gap_analysis.get("required_skills", [])
-            missing_skills = gap_analysis.get("missing_required_skills", [])
+            missing_skills  = gap_analysis.get("missing_required_skills", [])
+            match_pct       = gap_analysis.get("skill_match_percentage", 0)
+            readiness       = gap_analysis.get("readiness_level", "unknown")
+
             matched = [s for s in required_skills if s not in missing_skills]
 
-            # Next steps
             next_steps = []
             if missing_skills:
                 next_steps.append(
                     f"Focus on learning: {', '.join(missing_skills[:3])}"
                 )
-
-            readiness = gap_analysis.get("readiness_level", "unknown")
-            match_pct = gap_analysis.get("skill_match_percentage", 0)
 
             return CareerStats(
                 readiness_level=readiness,

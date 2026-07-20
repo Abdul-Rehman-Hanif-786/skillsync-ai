@@ -276,8 +276,18 @@ export default function ProfileEdit() {
             >
               <Field label="Target Role" icon={FiTarget}
                 hint="Your dream job title — the AI uses this to generate skill gap analysis and roadmaps">
-                <input type="text" value={form.target_role} onChange={set('target_role')}
-                  className={inputCls} placeholder="e.g. Senior Full Stack Engineer" />
+                <div className="relative">
+                  <input type="text" value={form.target_role} onChange={set('target_role')}
+                    className={inputCls} placeholder="e.g. Full Stack Developer"
+                    list="role-suggestions" />
+                  <datalist id="role-suggestions">
+                    {['Full Stack Developer','Frontend Developer','Backend Developer',
+                      'Data Scientist','AI Engineer','DevOps Engineer',
+                      'Cloud Engineer','Mobile Developer'].map(r => (
+                      <option key={r} value={r} />
+                    ))}
+                  </datalist>
+                </div>
               </Field>
 
               {form.target_role && (

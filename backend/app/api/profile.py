@@ -185,20 +185,36 @@ async def remove_skill(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Remove a skill from the current user's profile."""
+    """Remove a skill — accepts either user_skill.id or skill.id."""
     user_uuid = uuid.UUID(current_user["user_id"])
     profile = await _get_profile(user_uuid, db)
 
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found.")
 
+    try:
+        skill_uuid = uuid.UUID(skill_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid skill ID.")
+
+    # Try by user_skill.id first (frontend sends this)
     us_result = await db.execute(
         select(UserSkill).where(
+            UserSkill.id == skill_uuid,
             UserSkill.profile_id == profile.id,
-            UserSkill.skill_id == uuid.UUID(skill_id),
         )
     )
     user_skill = us_result.scalar_one_or_none()
+
+    # Fall back to skill.id (Skill table FK)
+    if not user_skill:
+        us_result2 = await db.execute(
+            select(UserSkill).where(
+                UserSkill.skill_id == skill_uuid,
+                UserSkill.profile_id == profile.id,
+            )
+        )
+        user_skill = us_result2.scalar_one_or_none()
 
     if not user_skill:
         raise HTTPException(status_code=404, detail="Skill not in profile.")
