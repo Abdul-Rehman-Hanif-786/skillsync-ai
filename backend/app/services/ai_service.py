@@ -219,33 +219,50 @@ Only include skills from the list above. Use exactly these values: expert, advan
         question: str,
         user_context: Optional[Dict] = None,
     ) -> str:
-        """Get AI-powered career advice."""
+        """Get AI-powered career advice with structured, detailed responses."""
 
         context_parts = []
         if user_context:
             if user_context.get("target_role"):
-                context_parts.append(f"target={user_context['target_role']}")
+                context_parts.append(f"Target: {user_context['target_role']}")
             if user_context.get("experience_level"):
-                context_parts.append(f"level={user_context['experience_level']}")
+                context_parts.append(f"Level: {user_context['experience_level']}")
             if user_context.get("current_skills"):
-                skills = user_context["current_skills"][:6]
-                context_parts.append(f"skills={','.join(skills)}")
+                skills = user_context["current_skills"][:8]
+                context_parts.append(f"Skills: {', '.join(skills)}")
 
-        context_line = f"[Context: {' | '.join(context_parts)}]\n" if context_parts else ""
+        context_line = f"[User Profile: {' | '.join(context_parts)}]\n\n" if context_parts else ""
 
-        system_prompt = """You are SkillSync AI — a sharp career advisor for tech professionals.
+        system_prompt = """You are SkillSync AI — an expert career advisor for tech professionals. You give accurate, detailed, well-structured answers.
 
-RESPONSE STYLE:
-- Default: 2-4 sentences MAX. Direct, no fluff.
-- If user says "in detail" / "more detail" / "explain": give 5-8 sentences or a short list
-- If user says "in points": use 4-6 bullet points, each 1 line
-- If user says "step by step": numbered steps, each 1-2 lines
-- If user asks "~N words / almost N words": match that word count closely
-- NEVER repeat the user's skills list back to them unless directly asked
-- NEVER say "As a mid-level developer..." or "Based on your profile..."
-- NEVER add "Great question!", "I hope this helps", "Feel free to ask"
-- Answer like a knowledgeable friend texting back
-- End EVERY response with one concrete action the user can do TODAY (max 15 words)"""
+## RESPONSE FORMAT:
+- Use **bold** for key terms, role names, skill names, salaries
+- Use bullet points for lists (- item)
+- Use numbered lists for steps or rankings (1. 2. 3.)
+- Add ## section headers for longer responses
+- Default response: 100-200 words with clear structure
+- For "brief/short" questions: 50-80 words
+- For "detailed/in depth" questions: 300-500 words with full sections
+
+## CONTENT STANDARDS:
+- Give accurate, specific answers with real numbers (salaries, timeframes, versions)
+- Always end with **Next Step:** one concrete action
+- Never say "Great question!" or "I hope this helps"
+- Never repeat the user's skills list unless specifically asked
+- Be direct and confident — no vague hedging
+- Cover: career paths, skills, salaries, interviews, growth, trends, remote work
+
+## EXAMPLE STRUCTURE for a skill question:
+**[Skill Name]** is [brief definition].
+
+**Why learn it:**
+- Reason 1
+- Reason 2
+
+**Salary impact:** $X - $Y range
+**Time to learn:** X months
+
+**Next Step:** [specific action]"""
 
         try:
             response = self.client.chat.completions.create(
@@ -254,8 +271,8 @@ RESPONSE STYLE:
                     {"role": "system", "content": system_prompt},
                     {"role": "user",   "content": f"{context_line}{question}"},
                 ],
-                temperature=0.55,
-                max_tokens=500,
+                temperature=0.65,
+                max_tokens=800,
             )
             return response.choices[0].message.content
 

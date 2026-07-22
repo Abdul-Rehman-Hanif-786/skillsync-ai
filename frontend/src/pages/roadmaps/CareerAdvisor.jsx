@@ -24,13 +24,28 @@ const QUICK_QUESTIONS = [
 function renderMarkdown(text) {
   if (!text) return ''
   return text
+    // ## Headers
+    .replace(/^## (.+)$/gm, '<p class="text-sm font-extrabold text-gray-900 mt-3 mb-1.5 border-b border-gray-100 pb-1">$1</p>')
+    // ### Sub-headers
+    .replace(/^### (.+)$/gm, '<p class="text-xs font-bold text-gray-700 mt-2 mb-1">$1</p>')
+    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+    // Inline code
     .replace(/`([^`]+)`/g, '<code class="bg-slate-100 text-primary-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
-    .replace(/^\d+\.\s(.+)$/gm, '<li class="flex items-start gap-2 mb-1"><span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">•</span><span>$1</span></li>')
-    .replace(/^[-•]\s(.+)$/gm, '<li class="flex items-start gap-2 mb-1"><span class="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0 mt-1.5"></span><span>$1</span></li>')
-    .replace(/(<li.*<\/li>\n?)+/g, '<ul class="space-y-0.5 my-2 ml-1">$&</ul>')
-    .replace(/\n\n/g, '<br/><br/>')
+    // Numbered list items
+    .replace(/^\d+\.\s\*\*(.+?)\*\*(.*)$/gm, '<li class="flex items-start gap-2 mb-2"><span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[9px] font-extrabold flex items-center justify-center flex-shrink-0 mt-0.5">•</span><span><strong class="font-bold text-gray-900">$1</strong>$2</span></li>')
+    .replace(/^\d+\.\s(.+)$/gm, '<li class="flex items-start gap-2 mb-1.5"><span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 text-[9px] font-extrabold flex items-center justify-center flex-shrink-0 mt-0.5">•</span><span>$1</span></li>')
+    // Bullet list items
+    .replace(/^-\s\*\*(.+?)\*\*(.*)$/gm, '<li class="flex items-start gap-2 mb-1.5"><span class="w-2 h-2 rounded-full bg-primary-400 flex-shrink-0 mt-1.5"></span><span><strong class="font-bold text-gray-900">$1</strong>$2</span></li>')
+    .replace(/^[-•]\s(.+)$/gm, '<li class="flex items-start gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0 mt-1.5"></span><span>$1</span></li>')
+    // Wrap consecutive li tags in ul
+    .replace(/(<li[\s\S]*?<\/li>\n?)+/g, '<ul class="space-y-0.5 my-2 ml-1">$&</ul>')
+    // Next Step highlight
+    .replace(/\*\*Next Step:\*\*(.*)/g, '<div class="mt-3 p-2.5 rounded-xl bg-primary-50 border border-primary-100 text-xs font-semibold text-primary-800 flex items-start gap-1.5"><span>→</span><span><strong>Next Step:</strong>$1</span></div>')
+    // Line breaks
+    .replace(/\n\n/g, '<br/>')
     .replace(/\n/g, '<br/>')
 }
 

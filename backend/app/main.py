@@ -1,5 +1,6 @@
 """Main application entry point."""
 
+import os
 from fastapi import FastAPI
 from fastapi.security import HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,8 @@ from app.api.recommendations import router as recommendations_router
 from app.api.roadmap import router as roadmap_router
 from app.api.dashboard import router as dashboard_router
 
+import os
+
 app = FastAPI(
     title="SkillSync AI",
     description="AI-powered career recommendation platform",
@@ -20,10 +23,16 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS - frontend ko allow karo
+# CORS — allow frontend origins
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        FRONTEND_URL,
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
